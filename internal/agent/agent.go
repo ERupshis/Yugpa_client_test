@@ -23,25 +23,26 @@ func Create(baseDialer dialer.BaseDialer, baseLogger logger.BaseLogger) Agent {
 	}
 }
 
-func (a *Agent) Serve(ctx context.Context, connCount int) {
+func (a *Agent) Run(ctx context.Context, connCount int) {
+	a.log.Info("[Agent:Run] starting '%d' goroutines", connCount)
 	for i := 0; i < connCount; i++ {
 		go func(num int) {
 			for {
 				select {
 				case <-ctx.Done():
-					a.log.Info("[Agent:Serve] goroutine '%d' has been stopped outside by context cancellation")
+					a.log.Info("[Agent:Run] goroutine '%d' has been stopped outside by context cancellation")
 					return
 				default:
 					reqMsg := messages.Request{}
 					reqMsg.Path = taskgenerator.GenerateRandomPath()
 					resp, err := a.dialer.MakeRequestToServer(ctx, &reqMsg)
 					if err != nil {
-						a.log.Info("[Agent:Serve] request failed: %v", err)
+						a.log.Info("[Agent:Run] request failed: %v", err)
 						time.Sleep(5 * time.Second)
 					}
 
 					if resp != nil {
-						a.log.Info("[Agent:Serve] received result from server: %v", resp)
+						a.log.Info("[Agent:Run] received result from server: %v", resp)
 					}
 				}
 			}

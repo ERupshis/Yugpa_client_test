@@ -8,7 +8,7 @@ import (
 	"syscall"
 
 	"github.com/erupshis/yugpa_test/internal/agent"
-	dialer2 "github.com/erupshis/yugpa_test/internal/agent/dialer"
+	"github.com/erupshis/yugpa_test/internal/agent/dialer"
 	"github.com/erupshis/yugpa_test/internal/config"
 	"github.com/erupshis/yugpa_test/internal/logger"
 )
@@ -24,16 +24,16 @@ func main() {
 	cfg := config.Parse()
 
 	//dialer.
-	dialer := dialer2.CreateDefaultTCP(cfg.ServerAddr, log)
+	dialerTCP := dialer.CreateDefaultTCP(cfg.ServerAddr, log)
 
 	//agent
-	client := agent.Create(dialer, log)
+	client := agent.Create(dialerTCP, log)
 
 	ctxWithCancel, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	//client's goroutines init.
-	client.Serve(ctxWithCancel, cfg.ConnectionsCount)
+	client.Run(ctxWithCancel, cfg.ConnectionsCount)
 
 	// Create a channel to wait for signals (e.g., Ctrl+C) to gracefully exit.
 	sigCh := make(chan os.Signal, 1)
