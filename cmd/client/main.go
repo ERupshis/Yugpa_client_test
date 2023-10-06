@@ -27,7 +27,7 @@ func main() {
 	dialerTCP := dialer.CreateDefaultTCP(cfg.ServerAddr, log)
 
 	//agent
-	client := agent.Create(dialerTCP, log)
+	client := agent.Create(cfg.GeneratorPath, dialerTCP, log)
 
 	ctxWithCancel, cancel := context.WithCancel(context.Background())
 	defer cancel()

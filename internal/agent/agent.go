@@ -11,15 +11,17 @@ import (
 )
 
 type Agent struct {
-	dialer dialer.BaseDialer
+	generatorPath string
+	dialer        dialer.BaseDialer
 
 	log logger.BaseLogger
 }
 
-func Create(baseDialer dialer.BaseDialer, baseLogger logger.BaseLogger) Agent {
+func Create(generatorPath string, baseDialer dialer.BaseDialer, baseLogger logger.BaseLogger) Agent {
 	return Agent{
-		dialer: baseDialer,
-		log:    baseLogger,
+		generatorPath: generatorPath,
+		dialer:        baseDialer,
+		log:           baseLogger,
 	}
 }
 
@@ -34,7 +36,7 @@ func (a *Agent) Run(ctx context.Context, connCount int) {
 					return
 				default:
 					reqMsg := messages.Request{}
-					reqMsg.Path = taskgenerator.GenerateRandomPath()
+					reqMsg.Path = taskgenerator.GenerateRandomPath(a.generatorPath)
 					resp, err := a.dialer.MakeRequestToServer(ctx, &reqMsg)
 					if err != nil {
 						a.log.Info("[Agent:Run] request failed: %v", err)
@@ -42,7 +44,7 @@ func (a *Agent) Run(ctx context.Context, connCount int) {
 					}
 
 					if resp != nil {
-						a.log.Info("[Agent:Run] received result from server: %v", resp)
+						a.log.Info("[Agent:Run] received result from server: %s", resp)
 					}
 				}
 			}

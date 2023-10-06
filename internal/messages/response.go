@@ -90,3 +90,27 @@ func (r *Response) Deserialize(buf io.Reader) error {
 
 	return nil
 }
+
+func (r *Response) String() string {
+	entries := ""
+
+	for name, val := range r.DirectoryEntries {
+		entries += fmt.Sprintf("name: '%s'(type: '%s'), ", name, getFolderType(val))
+	}
+
+	res := fmt.Sprintf(`Directory's data:
+	- status: '%d'
+	- entries: {%s}`, r.Status, entries)
+	return res
+}
+
+func getFolderType(entryType EntryType) string {
+	switch entryType {
+	case DIRECTORY:
+		return "dir"
+	case FILE:
+		return "file"
+	default:
+		return "undefined"
+	}
+}

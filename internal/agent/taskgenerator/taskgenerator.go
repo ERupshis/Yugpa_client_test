@@ -6,8 +6,8 @@ import (
 	"os"
 )
 
-func GenerateRandomPath() string {
-	res := "C:\\Users\\"
+func GenerateRandomPath(path string) string {
+	res := path
 
 	for i := 0; i < rand.Intn(3)+1; i++ {
 		files, err := os.ReadDir(res)
