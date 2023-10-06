@@ -15,7 +15,7 @@ func (r *Request) Serialize() ([]byte, error) {
 	pathLength := int32(len(r.Path))
 	buffer := make([]byte, 4+len(r.Path))
 
-	binary.BigEndian.PutUint32(buffer[0:4], uint32(pathLength))
+	binary.LittleEndian.PutUint32(buffer[0:4], uint32(pathLength))
 	copy(buffer[4:], r.Path)
 
 	return buffer, nil
@@ -23,7 +23,7 @@ func (r *Request) Serialize() ([]byte, error) {
 
 func (r *Request) Deserialize(conn net.Conn) error {
 	var pathLen int32
-	if err := binary.Read(conn, binary.BigEndian, &pathLen); err != nil {
+	if err := binary.Read(conn, binary.LittleEndian, &pathLen); err != nil {
 		return fmt.Errorf("read Path length: %w", err)
 	}
 

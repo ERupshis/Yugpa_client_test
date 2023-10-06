@@ -2,58 +2,49 @@ package agent
 
 import (
 	"context"
-	"fmt"
-	"net"
-	"yugpa_test/internal/messages"
+	"time"
+
+	"github.com/erupshis/yugpa_test/internal/agent/dialer"
+	"github.com/erupshis/yugpa_test/internal/agent/taskgenerator"
+	"github.com/erupshis/yugpa_test/internal/logger"
+	"github.com/erupshis/yugpa_test/internal/messages"
 )
 
 type Agent struct {
-	serverAddr string
+	dialer dialer.BaseDialer
+
+	log logger.BaseLogger
 }
 
-func Create(serverAddr string) Agent {
+func Create(baseDialer dialer.BaseDialer, baseLogger logger.BaseLogger) Agent {
 	return Agent{
-		serverAddr: serverAddr,
+		dialer: baseDialer,
+		log:    baseLogger,
 	}
 }
 
 func (a *Agent) Serve(ctx context.Context, connCount int) {
+	for i := 0; i < connCount; i++ {
+		go func(num int) {
+			for {
+				select {
+				case <-ctx.Done():
+					a.log.Info("[Agent:Serve] goroutine '%d' has been stopped outside by context cancellation")
+					return
+				default:
+					reqMsg := messages.Request{}
+					reqMsg.Path = taskgenerator.GenerateRandomPath()
+					resp, err := a.dialer.MakeRequestToServer(ctx, &reqMsg)
+					if err != nil {
+						a.log.Info("[Agent:Serve] request failed: %v", err)
+						time.Sleep(5 * time.Second)
+					}
 
-}
-
-func (a *Agent) makeRequestToServer() {
-	// Connect to the server
-	conn, err := net.Dial("tcp", a.serverAddr)
-	if err != nil {
-		fmt.Println("Error connecting to the server:", err)
-		return
+					if resp != nil {
+						a.log.Info("[Agent:Serve] received result from server: %v", resp)
+					}
+				}
+			}
+		}(i)
 	}
-	defer conn.Close()
-
-	request := messages.Request{
-		Path: "C:\\kafka\\",
-	}
-
-	// Serialize the request
-	requestBytes, err := request.Serialize()
-	if err != nil {
-		fmt.Printf("Error serializing request: %v\n", err)
-		return
-	}
-
-	// Send the request to the server
-	_, err = conn.Write(requestBytes)
-	if err != nil {
-		fmt.Printf("Error sending request to the server: %v\n", err)
-		return
-	}
-
-	// Receive and decode the response
-	var response messages.Response
-	if err = response.Deserialize(conn); err != nil {
-		fmt.Printf("Error reading response: %v\n", err)
-		return
-	}
-
-	fmt.Printf("%v\n", response)
 }
